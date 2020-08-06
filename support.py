@@ -81,7 +81,6 @@ def poly_g(L, interval, num):
             g_coeffs[j] *= (i*scaling)
         g_coeffs[j] += 1
         
-        
     return g_coeffs
     
 
@@ -100,6 +99,8 @@ def estimator(L, hist, interval):
     # converge histogram to fingerprint
     fin = hist_to_fin(hist)
     num = sum(hist)
+    if (num == 0):
+        return 0
     
     # get coefficient of polynomial used for estimation
     g_coeffs = poly_g(L, interval, num)
@@ -155,7 +156,7 @@ def OracleEstimator(histograms, intervals, L):
     # loop over histogram and intervals and add up support 
     for i, hist in enumerate(histograms):
         curr_interval = intervals[i]
-        supp_estimate += estimator(L, hist, interval)
+        supp_estimate += estimator(L, hist, curr_interval)
     return supp_estimate
     
 # Test usage

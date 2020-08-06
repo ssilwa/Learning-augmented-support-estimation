@@ -2,30 +2,117 @@ import numpy as np
 from support import *
 
 
-####### Testing Chen Yu data ######
+####### Loading data #######
 
-# Load actual query data
+print('Loading data')
 actual_data = np.load('data/query_counts_day_0050.npz')
 predicted_data = np.load('data/aol_inf_all_v05_t50_exp22_aol_5d_r1-h1_u256-32_eb64_bs128_ra_20180514-160509_ep190_res.npz')
 
-
-# Get file contents
-print(actual_data.files)
-print(predicted_data.files)
-
-# Make sure dimensions match
-print(actual_data['queries'].shape)
-print(predicted_data['test_output'].shape)
+# Get actual query probabilities
+actual_prob = actual_data['counts']/actual_data['counts'].sum()
 
 
-# Some of the predicitons are negative ... 
-good_indices = np.where(predicted_data['test_output'][:,0] > 0)
+####### Testing algorithm with actual probabilities #######
 
-# Reported loss
-print(predicted_data['test_loss'])
+print('Preprocessing')
+# Guess for the universe size
+n = int(1e6)
 
-# Actual loss
-# Slicing predicted_data['test_output'][:,0] to get rid of extra (,1) dimension at the end
+# Get samples drawn according to actual probability
+S = np.random.choice(range(actual_prob.size), size=50000, p=actual_prob)
 
-actual_loss = ((np.log(predicted_data['test_output'][:,0][good_indices])-np.log(actual_data['counts'][good_indices]))**2).sum()
-print(actual_loss)
+# Get probabilities of samples
+S_predicted_prob = actual_prob[S]
+
+# Round probabilities to nearest multiple of 1/n
+rounded_prob = [int(round(n*prob)) for prob in S_predicted_prob]
+S_with_prob = list(zip(S, rounded_prob))
+
+# Get intervals
+# Interval from [1/n to 1/(eps*n)]
+eps = 1e-6
+intervals = []
+left = 1
+right = 4
+while(right < 1/eps):
+    intervals.append([left, right])
+    left = right
+    right *= 4
+intervals.append([left, right])
+
+
+# Partition samples into intervals
+sample_partition = [[] for k in range(len(intervals))]
+for k in S_with_prob:
+    curr_prob = k[1]
+    bucket = int(np.log(curr_prob)/np.log(2))-1
+    try:
+        sample_partition[bucket].append(k[0])
+    except:
+        pass
+    
+# Get histogram for each interval
+histograms = [samples_to_histogram(samp, n) for samp in sample_partition]
+
+# Feed to oracle
+print('Running oracle algorithm')
+support = OracleEstimator(histograms, intervals, 20)
+print(support)
+
+# WuYang algorithm
+full_hist = samples_to_histogram(S,n)
+print('Running WuYang algorithm')
+support = WuYangEstimator(n, full_hist)
+print(support)
+
+####### Testing with fake data #######
+
+print('Preprocessing fake data')
+# Guess for the universe size
+n = 10000
+
+# Get samples drawn according to uniform on {0,..,99}
+S = np.random.choice(range(100), size=300)
+
+# Get probabilities of samples
+S_predicted_prob = [1./100 for s in S]
+
+# Round probabilities to nearest multiple of 1/n
+rounded_prob = [int(round(n*prob)) for prob in S_predicted_prob]
+S_with_prob = list(zip(S, rounded_prob))
+
+# Get intervals
+# Interval from [1/n to 1/(eps*n)]
+eps = 1e-3
+intervals = []
+left = 1
+right = 4
+while(right < 1/eps):
+    intervals.append([left, right])
+    left = right
+    right *= 4
+intervals.append([left, right])
+
+# Partition samples into intervals
+sample_partition = [[] for k in range(len(intervals))]
+for k in S_with_prob:
+    curr_prob = k[1]
+    bucket = int(np.log(curr_prob)/np.log(4))-1
+    try:
+        sample_partition[bucket].append(k[0])
+    except:
+        pass
+
+# Get histogram for each interval
+histograms = [samples_to_histogram(samp, n) for samp in sample_partition]
+
+# Feed to oracle
+print('Running oracle algorithm')
+support = OracleEstimator(histograms, intervals, 5)
+print(support)
+
+# WuYang algorithm
+full_hist = samples_to_histogram(S,n)
+print('Running WuYang algorithm')
+support = WuYangEstimator(n, full_hist)
+print(support)
