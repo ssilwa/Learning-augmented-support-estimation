@@ -45,7 +45,7 @@ intervals.append([left, right])
 sample_partition = [[] for k in range(len(intervals))]
 for k in S_with_prob:
     curr_prob = k[1]
-    bucket = int(np.log(curr_prob)/np.log(2))-1
+    bucket = int(np.log(curr_prob)/np.log(4))-1
     try:
         sample_partition[bucket].append(k[0])
     except:
