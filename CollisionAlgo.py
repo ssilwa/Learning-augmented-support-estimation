@@ -111,7 +111,7 @@ if __name__ == '__main__':
 	# actual probability for testing
 	actual_prob = actual_data['counts']/actual_data['counts'].sum()
 	# get samples and respective probabilities
-	S = np.random.choice(range(140725), size=50000, p=actual_prob)
+	S = np.random.choice(range(140725), size=25000, p=actual_prob)
 	S_predicted_prob = actual_prob[S]
 	# put it in requried format
 	samples = list(zip(S, S_predicted_prob))
