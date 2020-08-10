@@ -107,7 +107,7 @@ def collision_estimator(S, C=2, L=3):
 # testing
 if __name__ == '__main__':
 	# load data 
-	actual_data = np.load('data/query_counts_day_0050.npz') 
+	actual_data = np.load('data/by_day/query_counts_day_0050.npz') 
 	# actual probability for testing
 	actual_prob = actual_data['counts']/actual_data['counts'].sum()
 	# get samples and respective probabilities
@@ -116,5 +116,5 @@ if __name__ == '__main__':
 	# put it in requried format
 	samples = list(zip(S, S_predicted_prob))
 	# get estimate
-	support = collision_estimator(samples)
+	support = collision_estimator(samples, 2, 10)
 	print(support)
