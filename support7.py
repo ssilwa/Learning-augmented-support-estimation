@@ -260,18 +260,17 @@ if __name__ == '__main__':
         print()
         print("Sample percentage (of n):", prate)
         # Run methods
-        print("---BASE:--- \t " + "\t".join([str(b) for b in bases]))
         results = np.zeros((6, len(bases), reps)) # 6 methods
-        for b,base in enumerate(bases):
-            for rep in range(reps):
-                # Draw samples
-                n_samples = int(prate*n*1./100)
-                histogram = {}
-                for i in range(n_samples):
-                    sample = distribution[np.random.randint(n)]
-                    if sample not in histogram:
-                        histogram[sample] = 0
-                    histogram[sample] += 1
+        n_samples = int(prate*n*1./100)
+        for rep in range(reps):
+            # Draw samples
+            histogram = {}
+            for i in range(n_samples):
+                sample = distribution[np.random.randint(n)]
+                if sample not in histogram:
+                    histogram[sample] = 0
+                histogram[sample] += 1
+            for b,base in enumerate(bases):
                 perfect_oracle_output = callOracleEstimator(histogram, true_counts, base, 0, n, n_samples)
                 noisy_oracle_output = callOracleEstimator(histogram, noisy_counts, base, 0, n, n_samples)
                 learned_oracle_output = callOracleEstimator(histogram, oracle_counts, base, 0, n, n_samples)
@@ -283,8 +282,15 @@ if __name__ == '__main__':
                 results[5,b,rep] = learned_oracle_output[1]
         errors = np.abs(results*1./true_count - np.ones(results.shape))
         median_errors = np.round(np.median(errors, axis=2), 2)
+        std_errors = np.round(np.std(errors, axis=2), 2)
+        print("Median errors:")
+        print("---BASE:--- \t " + "\t".join([str(b) for b in bases]))
         for i,name in enumerate(methods):
             print(name + "\t" + "\t".join([str(x) for x in median_errors[i,:]]))
+        print("Standard deviations:")
+        print("---BASE:--- \t " + "\t".join([str(b) for b in bases]))
+        for i,name in enumerate(methods):
+            print(name + "\t" + "\t".join([str(x) for x in std_errors[i,:]]))
         #print(median_errors)
         print("Wu-Yang:", np.round(np.abs(1-WuYangEstimator(n, list(histogram.values()))*1./true_count), 2))
 
